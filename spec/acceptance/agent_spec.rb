@@ -6,8 +6,8 @@ describe 'puppet::agent::settings' do
     it 'should work with no errors' do
       pp = <<-EOS
         include ::puppet
-        puppet::agent::setting { 'runinterval':
-          value => '5'
+        puppet::agent::setting { 'certificate_revocation':
+          value => 'false'
         }
       EOS
 
@@ -18,7 +18,7 @@ describe 'puppet::agent::settings' do
 
     describe file '/etc/puppet/puppet.conf' do
       it { is_expected.to be_file }
-      its(:content) { should contain /runinterval/ }
+      its(:content) { should contain /certificate_revocation/ }
     end
 
   end
