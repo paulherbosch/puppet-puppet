@@ -5,6 +5,7 @@ describe 'puppet::main::settings' do
   describe 'running puppet code' do
     it 'should work with no errors' do
       pp = <<-EOS
+        include ::puppet
         puppet::main::setting { 'environment':
           value => 'spec'
         }

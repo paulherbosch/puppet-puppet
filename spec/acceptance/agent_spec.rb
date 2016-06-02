@@ -5,6 +5,7 @@ describe 'puppet::agent::settings' do
   describe 'running puppet code' do
     it 'should work with no errors' do
       pp = <<-EOS
+        include ::puppet
         puppet::agent::setting { 'runinterval':
           value => '5'
         }
