@@ -4,7 +4,6 @@ define puppet::master::setting( $ensure = 'present', $value = undef ) {
     lens    => 'Puppet.lns',
     incl    => '/etc/puppet/puppet.conf',
     context => '/files/etc/puppet/puppet.conf/master',
-    notify  => Service['puppet'],
   }
 
   case $ensure {
