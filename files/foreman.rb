@@ -6,9 +6,9 @@
 require 'puppet'
 require 'net/http'
 require 'net/https'
+require 'rbconfig'
 require 'uri'
 require 'yaml'
-
 begin
   require 'json'
 rescue LoadError
@@ -24,12 +24,15 @@ rescue LoadError
   end
 end
 
-$settings_file = "/etc/foreman/puppet.yaml"
+if RbConfig::CONFIG['host_os'] =~ /freebsd|dragonfly/i
+  $settings_file = '/usr/local/etc/puppet/foreman.yaml'
+else
+  $settings_file = File.exist?('/etc/puppetlabs/puppet/foreman.yaml') ? '/etc/puppetlabs/puppet/foreman.yaml' : '/etc/puppet/foreman.yaml'
+end
 
 SETTINGS = YAML.load_file($settings_file)
 
 Puppet::Reports.register_report(:foreman) do
-  Puppet.settings.use(:reporting)
   desc "Sends reports directly to Foreman"
 
   def process
@@ -39,6 +42,9 @@ Puppet::Reports.register_report(:foreman) do
 
       uri = URI.parse(foreman_url)
       http = Net::HTTP.new(uri.host, uri.port)
+      if SETTINGS[:report_timeout]
+        http.read_timeout = SETTINGS[:report_timeout]
+      end
       http.use_ssl     = uri.scheme == 'https'
       if http.use_ssl?
         if SETTINGS[:ssl_ca] && !SETTINGS[:ssl_ca].empty?
@@ -52,44 +58,13 @@ Puppet::Reports.register_report(:foreman) do
           http.key  = OpenSSL::PKey::RSA.new(File.read(SETTINGS[:ssl_key]), nil)
         end
       end
-      req = Net::HTTP::Post.new("#{uri.path}/api/reports")
+      req = Net::HTTP::Post.new("#{uri.path}/api/config_reports")
       req.add_field('Accept', 'application/json,version=2' )
       req.content_type = 'application/json'
-      req.body         = {'report' => generate_report}.to_json
+      req.body         = {'config_report' => generate_report}.to_json
       response = http.request(req)
     rescue Exception => e
-      raise Puppet::Error, "Could not send report to Foreman at #{foreman_url}/api/reports: #{e}\n#{e.backtrace}"
-    end
-
-    begin
-      uri = URI.parse(foreman_url)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl     = uri.scheme == 'https'
-      if http.use_ssl?
-        if SETTINGS[:ssl_ca] && !SETTINGS[:ssl_ca].empty?
-          http.ca_file = SETTINGS[:ssl_ca]
-          http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        else
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        end
-        if SETTINGS[:ssl_cert] && !SETTINGS[:ssl_cert].empty? && SETTINGS[:ssl_key] && !SETTINGS[:ssl_key].empty?
-          http.cert = OpenSSL::X509::Certificate.new(File.read(SETTINGS[:ssl_cert]))
-          http.key  = OpenSSL::PKey::RSA.new(File.read(SETTINGS[:ssl_key]), nil)
-        end
-      end
-      req = Net::HTTP::Post.new("#{uri.path}/api/hosts/facts")
-      req.add_field('Accept', 'application/json,version=2' )
-      req.content_type = 'application/json'
-      # Strip the Puppet:: ruby objects and keep the plain hash
-      filename = "#{SETTINGS[:puppetdir]}/yaml/facts/#{self.host}.yaml"
-      facts = File.read(filename)
-      certname = File.basename(filename, ".yaml")
-      puppet_facts = YAML::load(facts.gsub(/\!ruby\/object.*$/,''))
-      hostname = puppet_facts['values']['fqdn'] || certname
-      req.body = {'facts' => puppet_facts['values'], 'name' => hostname, 'certname' => certname}.to_json
-      response = http.request(req)
-    rescue Exception => e
-      raise Puppet::Error, "Could not send facts to Foreman at #{foreman_url}/api/hosts/facts: #{e}\n#{e.backtrace}"
+      raise Puppet::Error, "Could not send report to Foreman at #{foreman_url}/api/config_reports: #{e}\n#{e.backtrace}"
     end
   end
 
@@ -136,7 +111,7 @@ Puppet::Reports.register_report(:foreman) do
       report_status["failed"] += 1
     end
     # fix for Puppet non-resource errors (i.e. failed catalog fetches before falling back to cache)
-    report_status["failed"] += report.logs.find_all {|l| l.source == 'Puppet' && l.level.to_s == 'err' }.count
+    report_status["failed"] += report.logs.find_all {|l| l.source =~ /Puppet$/ && l.level.to_s == 'err' }.count
 
     return report_status
   end
@@ -210,10 +185,6 @@ Puppet::Reports.register_report(:foreman) do
 
   def foreman_url
     SETTINGS[:url] || raise(Puppet::Error, "Must provide URL in #{$settings_file}")
-  end
-
-  def puppetdir
-    SETTINGS[:puppetdir] || raise(Puppet::Error, "Must provide puppet base directory in #{$settings_file}")
   end
 
 end

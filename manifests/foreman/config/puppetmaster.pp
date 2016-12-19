@@ -1,5 +1,10 @@
 define puppet::foreman::config::puppetmaster(
   $foreman_url = undef,
+  $ssl_ca = undef,
+  $ssl_cert = undef,
+  $ssl_key = undef,
+  $foreman_user = undef,
+  $foreman_password = undef
   $puppet_home = '/var/lib/puppet',
   $puppet_user = 'puppet',
   $facts = true) {
@@ -14,20 +19,20 @@ define puppet::foreman::config::puppetmaster(
     fail("Reporting::Foreman::Config::Puppetmaster[$foreman_url]: foreman_url must be a valid URL")
   }
 
-  file { '/etc/foreman':
-    ensure => directory
-  }
-
-  file { '/etc/foreman/puppet.yaml':
+  file { '/etc/puppet/foreman.yaml':
     ensure  => file,
     owner   => root,
     group   => root,
-    mode    => '0644',
-    content => template("${module_name}/foreman/etc/puppet.yaml.erb"),
-    require => File['/etc/foreman']
+    mode    => '0640',
+    content => template("${module_name}/foreman/etc/foreman.yaml.erb")
   }
 
-  file { '/usr/lib/ruby/site_ruby/1.8/puppet/reports/foreman.rb' :
+  case $operatingsystemmajrelease {
+    6: { $report_location = '/usr/lib/ruby/site_ruby/1.8/puppet/reports' }
+    7: { $report_location = '/usr/share/ruby/vendor_ruby/puppet/reports/' }
+  }
+
+  file { "${report_location}/foreman.rb":
     ensure  => file,
     owner   => root,
     group   => root,
