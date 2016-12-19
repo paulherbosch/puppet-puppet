@@ -21,8 +21,8 @@ define puppet::foreman::config::puppetmaster(
 
   file { '/etc/puppet/foreman.yaml':
     ensure  => file,
-    owner   => root,
-    group   => root,
+    owner   => $puppet_user,
+    group   => $puppet_user,
     mode    => '0640',
     content => template("${module_name}/foreman/etc/foreman.yaml.erb")
   }
@@ -34,8 +34,8 @@ define puppet::foreman::config::puppetmaster(
 
   file { "${report_location}/foreman.rb":
     ensure  => file,
-    owner   => root,
-    group   => root,
+    owner   => $puppet_user,
+    group   => $puppet_user,
     mode    => '0644',
     source  => "puppet:///modules/${module_name}/foreman.rb",
     notify  => Service['puppet']
@@ -43,8 +43,8 @@ define puppet::foreman::config::puppetmaster(
 
   file { '/usr/local/scripts/push_facts_to_foreman.rb':
     ensure  => file,
-    owner   => root,
-    group   => root,
+    owner   => $puppet_user,
+    group   => $puppet_user,
     mode    => '0755',
     source  => "puppet:///modules/${module_name}/push_facts_to_foreman.rb"
   }
