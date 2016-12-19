@@ -4,7 +4,7 @@ define puppet::foreman::config::puppetmaster(
   $ssl_cert = undef,
   $ssl_key = undef,
   $foreman_user = undef,
-  $foreman_password = undef
+  $foreman_password = undef,
   $puppet_home = '/var/lib/puppet',
   $puppet_user = 'puppet',
   $facts = true) {
