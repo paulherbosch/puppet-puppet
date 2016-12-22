@@ -23,7 +23,7 @@ define puppet::foreman::config::puppetmaster(
     ensure  => file,
     owner   => $puppet_user,
     group   => $puppet_user,
-    mode    => '0640',
+    mode    => '0440',
     content => template("${module_name}/foreman/etc/foreman.yaml.erb")
   }
 
@@ -50,7 +50,7 @@ define puppet::foreman::config::puppetmaster(
   }
 
   cron { 'push_facts_to_foreman':
-    command => 'sudo -u puppet /usr/local/scripts/push_facts_to_foreman.rb --push-facts',
+    command => 'sudo -u puppet /usr/local/scripts/push_facts_to_foreman.rb --push-facts-parallel',
     user    => root,
     hour    => 2,
     minute  => 0,
