@@ -47,7 +47,7 @@ Puppet::Reports.register_report(:foreman) do
       end
       http.use_ssl     = uri.scheme == 'https'
       if http.use_ssl?
-        if SETTINGS[:ssl_ca] && !SETTINGS[:ssl_ca].empty?
+        if SETTINGS[:ssl_verify] && !SETTINGS[:ssl_ca].empty?
           http.ca_file = SETTINGS[:ssl_ca]
           http.verify_mode = OpenSSL::SSL::VERIFY_PEER
         else
