@@ -55,7 +55,7 @@ define puppet::foreman::config::puppetmaster(
     user    => root,
     hour    => 2,
     minute  => 0,
-    require => File['/usr/local/scripts/push_facts_to_foreman.rb']
+    require => [ File['/usr/local/scripts/push_facts_to_foreman.rb'], File['/usr/local/scripts'] ]
   }
 
 }
