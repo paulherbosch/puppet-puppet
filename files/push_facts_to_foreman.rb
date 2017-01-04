@@ -150,7 +150,7 @@ def initialize_http(uri)
   res              = Net::HTTP.new(uri.host, uri.port)
   res.use_ssl      = uri.scheme == 'https'
   if res.use_ssl?
-    if SETTINGS[:ssl_ca] && !SETTINGS[:ssl_ca].empty?
+    if SETTINGS[:ssl_verify] && !SETTINGS[:ssl_ca].empty?
       res.ca_file = SETTINGS[:ssl_ca]
       res.verify_mode = OpenSSL::SSL::VERIFY_PEER
     else
