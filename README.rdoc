@@ -1,6 +1,6 @@
 = puppet-puppet module
 
-{<img src='https://codex.cegeka.be/jenkins/job/puppet-puppet/badge/icon' />}[https://codex.cegeka.be/jenkins/job/puppet-puppet/]
+{<img src='https://jenkins-iac.cegeka.be/job/puppet-puppet/badge/icon' />}[https://jenkins-iac.cegeka.be/job/puppet-puppet/]
 
 This module manages puppet and provides reporting functionality. You can setup your Puppet Master and Puppet Agents to use reporting.  Currently 'Foreman' reporting is implemented.
 
